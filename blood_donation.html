@@ -1,0 +1,2765 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeGive — Blood Donation Portal</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --red: #C8102E;
+            --red-dark: #9B0B22;
+            --red-light: #FF3352;
+            --cream: #FDF8F5;
+            --grey: #F3EEE9;
+            --charcoal: #1A1A1A;
+            --mid: #6B6560;
+            --border: #E2D9D1;
+            --white: #FFFFFF;
+            --success: #2D7D46;
+            --shadow: 0 4px 32px rgba(200, 16, 46, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--charcoal);
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 0 5vw;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--red);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .logo-drop {
+            width: 36px;
+            height: 36px;
+            background: var(--red);
+            clip-path: polygon(50% 0%, 80% 30%, 100% 60%, 80% 85%, 50% 100%, 20% 85%, 0% 60%, 20% 30%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-drop::after {
+            content: '♥';
+            color: white;
+            font-size: 14px;
+        }
+
+        .header-tag {
+            font-size: 0.75rem;
+            color: var(--mid);
+            background: var(--grey);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* ===== LOADING OVERLAY ===== */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(253, 248, 245, 0.92);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--red);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            font-size: 0.9rem;
+            color: var(--mid);
+        }
+
+        /* ===== OTP MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px 36px;
+            max-width: 440px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.95);
+            transition: transform 0.3s;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-overlay.open .modal {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--red), var(--red-dark));
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .modal h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .modal p {
+            color: var(--mid);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        .modal p strong {
+            color: var(--charcoal);
+        }
+
+        .otp-inputs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .otp-inputs input {
+            width: 50px;
+            height: 56px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--charcoal);
+            background: var(--cream);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .otp-inputs input:focus {
+            border-color: var(--red);
+            background: white;
+        }
+
+        .otp-error {
+            color: #e53e3e;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .otp-error.show {
+            display: block;
+        }
+
+        .otp-resend {
+            font-size: 0.82rem;
+            color: var(--mid);
+        }
+
+        .otp-resend a {
+            color: var(--red);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            padding: 13px 32px;
+            border-radius: 50px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--red);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--red-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(200, 16, 46, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--mid);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--charcoal);
+            color: var(--charcoal);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--red), var(--red-dark));
+            color: white;
+            padding: 16px 40px;
+            font-size: 1rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 32px;
+            gap: 12px;
+        }
+
+        /* ===== PAGES ===== */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== LANDING PAGE ===== */
+        .landing-hero {
+            background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+            padding: 80px 5vw 100px;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .landing-hero::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .landing-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -120px;
+            left: 20%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 50%;
+        }
+
+        .landing-hero-inner {
+            position: relative;
+            z-index: 1;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .landing-hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            color: white;
+            line-height: 1.15;
+            margin-bottom: 16px;
+        }
+
+        .landing-hero p {
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 1.05rem;
+            line-height: 1.7;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+        }
+
+        /* ===== PANELS SECTION ===== */
+        .panels-section {
+            max-width: 960px;
+            margin: -40px auto 60px;
+            padding: 0 5vw;
+            position: relative;
+            z-index: 10;
+        }
+
+        .panels-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media(max-width:680px) {
+            .panels-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px 32px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .panel-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 18px;
+        }
+
+        .panel-icon.reg {
+            background: linear-gradient(135deg, #FFE5EA, #FFC0CC);
+        }
+
+        .panel-icon.login {
+            background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+        }
+
+        .panel h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .panel p {
+            color: var(--mid);
+            font-size: 0.88rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .panel-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 20px 0;
+        }
+
+        /* ===== FORM FIELDS ===== */
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        label.fl {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--charcoal);
+        }
+
+        label.fl .req {
+            color: var(--red);
+            margin-left: 2px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.92rem;
+            color: var(--charcoal);
+            background: var(--cream);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            appearance: none;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.1);
+            background: white;
+        }
+
+        input.invalid {
+            border-color: #e53e3e;
+            background: #fff5f5;
+        }
+
+        .field-error {
+            font-size: 0.76rem;
+            color: #e53e3e;
+            display: none;
+        }
+
+        .field-error.show {
+            display: block;
+        }
+
+        .field-hint {
+            font-size: 0.76rem;
+            color: var(--mid);
+            font-style: italic;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* ===== INFO BOX ===== */
+        .info-box {
+            background: #FFF8E1;
+            border: 1px solid #FFD54F;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.84rem;
+            color: #795548;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .info-box.success-box {
+            background: #E8F5E9;
+            border-color: #A5D6A7;
+            color: #2E7D32;
+        }
+
+        .info-box .icon {
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        /* ===== UNIQUE ID DISPLAY ===== */
+        .id-display {
+            background: var(--grey);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .id-display small {
+            display: block;
+            font-size: 0.72rem;
+            color: var(--mid);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .id-display strong {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--red);
+            letter-spacing: 0.05em;
+        }
+
+        .id-display .id-note {
+            font-size: 0.78rem;
+            color: var(--mid);
+            margin-top: 8px;
+        }
+
+        /* ===== FORM STEPS (donation form) ===== */
+        .progress-wrap {
+            background: var(--white);
+            padding: 28px 5vw;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 70px;
+            z-index: 90;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .progress-steps {
+            display: flex;
+            align-items: center;
+            max-width: 800px;
+            gap: 0;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            position: relative;
+        }
+
+        .step-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 46px;
+            right: 10px;
+            top: 18px;
+            height: 2px;
+            background: var(--border);
+            z-index: 0;
+            transition: background 0.4s;
+        }
+
+        .step-item.done:not(:last-child)::after {
+            background: var(--red);
+        }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--grey);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--mid);
+            z-index: 1;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .step-item.active .step-num {
+            background: var(--red);
+            border-color: var(--red);
+            color: white;
+            box-shadow: 0 0 0 4px rgba(200, 16, 46, 0.15);
+        }
+
+        .step-item.done .step-num {
+            background: var(--red-dark);
+            border-color: var(--red-dark);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--mid);
+            white-space: nowrap;
+            z-index: 1;
+            position: relative;
+            background-color: white;
+        }
+
+        .step-item.active .step-label {
+            color: var(--red);
+            font-weight: 600;
+        }
+
+        .step-item.done .step-label {
+            color: var(--charcoal);
+        }
+
+        @media(max-width:600px) {
+            .step-label {
+                display: none;
+            }
+        }
+
+        main {
+            max-width: 860px;
+            margin: 40px auto;
+            padding: 0 5vw 80px;
+        }
+
+        .form-step {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .step-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: var(--charcoal);
+            margin-bottom: 6px;
+        }
+
+        .step-subtitle {
+            color: var(--mid);
+            font-size: 0.95rem;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .card-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--red);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            display: block;
+            width: 3px;
+            height: 16px;
+            background: var(--red);
+            border-radius: 2px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-grid.cols-3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .form-grid.cols-1 {
+            grid-template-columns: 1fr;
+        }
+
+        .col-span-2 {
+            grid-column: span 2;
+        }
+
+        .col-span-full {
+            grid-column: 1 / -1;
+        }
+
+        @media(max-width:640px) {
+
+            .form-grid,
+            .form-grid.cols-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .col-span-2,
+            .col-span-full {
+                grid-column: span 1;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+
+        .age-badge {
+            display: inline-block;
+            background: var(--grey);
+            color: var(--mid);
+            font-size: 0.78rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-top: 4px;
+        }
+
+        .age-badge.ok {
+            background: #E8F5E9;
+            color: var(--success);
+        }
+
+        .age-badge.fail {
+            background: #FFEBEE;
+            color: #e53e3e;
+        }
+
+        .check-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.88rem;
+        }
+
+        .check-item input[type="checkbox"],
+        .check-item input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--red);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .yn-group {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .confidential-box {
+            background: #FFF3E0;
+            border-left: 4px solid #FF9800;
+            border-radius: 0 10px 10px 0;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            font-size: 0.82rem;
+            color: #5D4037;
+        }
+
+        .consent-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            background: var(--cream);
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .consent-item:hover {
+            border-color: var(--red);
+        }
+
+        .consent-item input {
+            flex-shrink: 0;
+            margin-top: 2px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--red);
+        }
+
+        .consent-item p {
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .consent-item strong {
+            display: block;
+            margin-bottom: 2px;
+            font-size: 0.9rem;
+        }
+
+        .signature-field {
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            background: var(--cream);
+        }
+
+        .signature-field input {
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--charcoal);
+            width: 100%;
+        }
+
+        .signature-field input:focus {
+            box-shadow: none;
+        }
+
+        .sig-label {
+            font-size: 0.75rem;
+            color: var(--mid);
+            border-top: 1px solid var(--border);
+            margin-top: 10px;
+            padding-top: 8px;
+        }
+
+        /* ===== SUCCESS ===== */
+        #step-success {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        #step-success.active {
+            display: block;
+        }
+
+        .success-icon {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, #2D7D46, #1B5E20);
+            border-radius: 50%;
+            margin: 0 auto 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            animation: popIn 0.5s ease;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            70% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #step-success h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        #step-success p {
+            color: var(--mid);
+            font-size: 1rem;
+            margin-bottom: 24px;
+        }
+
+        .donor-id-box {
+            display: inline-block;
+            background: var(--grey);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 32px;
+            margin-bottom: 32px;
+        }
+
+        .donor-id-box small {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--mid);
+            margin-bottom: 4px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .donor-id-box strong {
+            font-size: 1.6rem;
+            font-family: 'Playfair Display', serif;
+            color: var(--red);
+            letter-spacing: 0.05em;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: var(--charcoal);
+            color: rgba(255, 255, 255, 0.75);
+            margin-top: 60px;
+        }
+
+        .footer-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 60px 5vw 40px;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+        }
+
+        @media(max-width:768px) {
+            .footer-inner {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media(max-width:480px) {
+            .footer-inner {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 14px;
+        }
+
+        .footer-brand p {
+            font-size: 0.88rem;
+            line-height: 1.7;
+            margin-bottom: 16px;
+            max-width: 260px;
+        }
+
+        .footer-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .footer-badges span {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .footer-col h4 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .footer-col ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-col ul li {
+            font-size: 0.87rem;
+        }
+
+        .footer-col ul li a {
+            color: rgba(255, 255, 255, 0.65);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-col ul li a:hover {
+            color: var(--red-light);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 20px 5vw;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.4);
+            flex-wrap: wrap;
+            gap: 8px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* ===== DONOR INFO BANNER ===== */
+        .donor-banner {
+            background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+            padding: 24px 5vw;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .donor-banner-info {
+            color: white;
+        }
+
+        .donor-banner-info small {
+            font-size: 0.75rem;
+            opacity: 0.75;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .donor-banner-info strong {
+            display: block;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+        }
+
+        .donor-banner-id {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: white;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.06em;
+        }
+
+        @media(max-width:480px) {
+            .otp-inputs input {
+                width: 42px;
+                height: 48px;
+                font-size: 1.2rem;
+            }
+
+            .btn-row {
+                flex-direction: column-reverse;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .panels-section {
+                margin-top: -20px;
+            }
+        }
+
+        /* ===== SUCCESS PAGE REDESIGN ===== */
+        #step-success {
+            display: none;
+            padding: 0 0 60px;
+        }
+
+        .success-container {
+            text-align: center;
+            padding: 60px 20px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: floatUp 3s ease-in forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-600px) scale(0.3) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Heart */
+        .success-heart-wrap {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 28px;
+            z-index: 1;
+        }
+
+        .success-heart {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--red), var(--red-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            animation: heartBeat 1.2s ease infinite;
+            box-shadow: 0 8px 32px rgba(200, 16, 46, 0.35);
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes heartBeat {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            14% {
+                transform: scale(1.15);
+            }
+
+            28% {
+                transform: scale(1);
+            }
+
+            42% {
+                transform: scale(1.1);
+            }
+
+            70% {
+                transform: scale(1);
+            }
+        }
+
+        .pulse-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            border: 3px solid rgba(200, 16, 46, 0.4);
+            animation: pulseOut 2s ease-out infinite;
+        }
+
+        .ring1 {
+            width: 100px;
+            height: 100px;
+            animation-delay: 0s;
+        }
+
+        .ring2 {
+            width: 100px;
+            height: 100px;
+            animation-delay: 0.5s;
+        }
+
+        .ring3 {
+            width: 100px;
+            height: 100px;
+            animation-delay: 1s;
+        }
+
+        @keyframes pulseOut {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(2.8);
+                opacity: 0;
+            }
+        }
+
+        /* Text */
+        .success-badge {
+            display: inline-block;
+            background: #E8F5E9;
+            color: var(--success);
+            border: 1px solid #A5D6A7;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            letter-spacing: 0.04em;
+            animation: slideDown 0.6s ease 0.3s both;
+            z-index: 1;
+            position: relative;
+        }
+
+        .success-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            margin-bottom: 12px;
+            animation: slideDown 0.6s ease 0.4s both;
+            position: relative;
+            z-index: 1;
+        }
+
+        .success-title span {
+            color: var(--red);
+        }
+
+        .success-msg {
+            color: var(--mid);
+            font-size: 1rem;
+            line-height: 1.7;
+            max-width: 500px;
+            margin: 0 auto 32px;
+            animation: slideDown 0.6s ease 0.5s both;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ID Row */
+        .success-id-row {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+            animation: slideDown 0.6s ease 0.6s both;
+            position: relative;
+            z-index: 1;
+        }
+
+        .success-id-box {
+            background: var(--grey);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 24px;
+            min-width: 120px;
+        }
+
+        .success-id-box small {
+            display: block;
+            font-size: 0.72rem;
+            color: var(--mid);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .success-id-box strong {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--charcoal);
+        }
+
+        /* Impact strip */
+        .success-impact {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 36px;
+            animation: slideDown 0.6s ease 0.7s both;
+            position: relative;
+            z-index: 1;
+        }
+
+        .impact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 0.88rem;
+            color: var(--charcoal);
+        }
+
+        .impact-icon {
+            font-size: 1.2rem;
+        }
+
+        /* Action buttons */
+        .success-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.6s ease 0.8s both;
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, var(--red), var(--red-dark));
+            color: white;
+            padding: 16px 48px;
+            font-size: 1rem;
+            box-shadow: 0 6px 24px rgba(200, 16, 46, 0.3);
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 32px rgba(200, 16, 46, 0.4);
+        }
+
+        /* ===== PRINT / PDF TEMPLATE ===== */
+        #printArea {
+            display: none;
+        }
+
+        @media print {
+            body>*:not(#printArea) {
+                display: none !important;
+            }
+
+            #printArea {
+                display: block !important;
+                font-family: 'DM Sans', sans-serif;
+                padding: 32px;
+                color: #111;
+            }
+
+            .print-header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                border-bottom: 3px solid #C8102E;
+                padding-bottom: 16px;
+                margin-bottom: 24px;
+            }
+
+            .print-logo {
+                font-family: serif;
+                font-size: 1.8rem;
+                font-weight: 900;
+                color: #C8102E;
+            }
+
+            .print-title {
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #333;
+            }
+
+            .print-id {
+                font-size: 0.85rem;
+                color: #777;
+            }
+
+            .print-section {
+                margin-bottom: 20px;
+            }
+
+            .print-section h3 {
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                color: #C8102E;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 6px;
+                margin-bottom: 12px;
+            }
+
+            .print-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px 24px;
+            }
+
+            .print-field {
+                font-size: 0.85rem;
+                padding: 5px 0;
+                border-bottom: 1px dashed #ddd;
+            }
+
+            .print-field strong {
+                display: block;
+                font-size: 0.7rem;
+                color: #999;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+
+            .print-footer {
+                margin-top: 40px;
+                border-top: 1px solid #ddd;
+                padding-top: 16px;
+                font-size: 0.75rem;
+                color: #999;
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .print-sig {
+                margin-top: 32px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 40px;
+            }
+
+            .print-sig-line {
+                border-top: 1px solid #333;
+                padding-top: 6px;
+                font-size: 0.78rem;
+                color: #555;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== LOADING OVERLAY ===== -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Processing...</div>
+    </div>
+
+    <!-- ===== OTP MODAL (shared) ===== -->
+    <div class="modal-overlay" id="otpModal">
+        <div class="modal">
+            <div class="modal-icon">📧</div>
+            <h2 id="otpModalTitle">Verify Your Email</h2>
+            <p>We sent a 6-digit code to <strong id="otpEmail"></strong>. Enter it below to continue.</p>
+            <div class="otp-inputs" id="otpInputs">
+                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric">
+            </div>
+            <div class="otp-error" id="otpError">❌ Incorrect code. Please try again.</div>
+            <button class="btn btn-primary" style="width:100%;margin-bottom:16px;" id="otpVerifyBtn">Verify</button>
+            <div class="otp-resend">Didn't receive it? <a id="resendLink" onclick="resendOTP()">Resend</a> <span
+                    id="resendCountdown" style="font-weight:600;"></span></div>
+        </div>
+    </div>
+
+    <!-- ===== HEADER ===== -->
+    <header>
+        <a class="logo" onclick="goToLanding()">
+            <div class="logo-drop"></div>
+            LifeGive
+        </a>
+        <span class="header-tag">🩸 Donor Portal</span>
+    </header>
+
+    <!-- ===================================================================
+         PAGE 1: LANDING (Register + Login panels)
+    =================================================================== -->
+    <div class="page active" id="page-landing">
+        <div class="landing-hero">
+            <div class="landing-hero-inner">
+                <div class="hero-badge">🌍 Save Lives Today</div>
+                <h1>Blood Donation<br>Starts Here</h1>
+                <p>Every donation can save up to three lives. Register to join our life-saving community or log in to
+                    complete your donation form.</p>
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <div class="stat-num">3</div>
+                        <div class="stat-label">Lives per donation</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num">90+</div>
+                        <div class="stat-label">Days between donations</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num">10 min</div>
+                        <div class="stat-label">To register</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panels-section">
+            <div class="panels-grid">
+
+                <!-- REGISTER PANEL -->
+                <div class="panel">
+                    <div class="panel-icon reg">🩸</div>
+                    <h2>New Donor Register</h2>
+                    <p>First time here? Create your donor account with your email and mobile. You'll receive an OTP and
+                        a unique Donor ID.</p>
+                    <div class="panel-divider"></div>
+
+                    <div class="field">
+                        <label class="fl">Full Name <span class="req">*</span></label>
+                        <input type="text" id="reg-name" placeholder="As on your ID">
+                        <div class="field-error" id="err-reg-name">Full name is required.</div>
+                    </div>
+                    <div class="field">
+                        <label class="fl">Email Address <span class="req">*</span></label>
+                        <input type="email" id="reg-email" placeholder="you@example.com">
+                        <div class="field-error" id="err-reg-email">Valid email is required.</div>
+                    </div>
+                    <div class="field">
+                        <label class="fl">Mobile Number <span class="req">*</span></label>
+                        <input type="tel" id="reg-phone" placeholder="+91 99999 99999">
+                        <div class="field-error" id="err-reg-phone">Valid mobile number required.</div>
+                    </div>
+                    <button class="btn btn-primary" style="width:100%;margin-top:8px;"
+                        onclick="startRegister()">Register &amp; Get OTP →</button>
+                </div>
+
+                <!-- LOGIN PANEL -->
+                <div class="panel">
+                    <div class="panel-icon login">🔐</div>
+                    <h2>Donor Login</h2>
+                    <p>Already registered? Enter your Donor ID, email and mobile to receive an OTP and access your
+                        donation form.</p>
+                    <div class="panel-divider"></div>
+
+                    <div class="field">
+                        <label class="fl">Donor ID <span class="req">*</span></label>
+                        <input type="text" id="login-id" placeholder="e.g. LG26-XXXXX">
+                        <div class="field-error" id="err-login-id">Donor ID is required.</div>
+                    </div>
+                    <div class="field">
+                        <label class="fl">Email Address <span class="req">*</span></label>
+                        <input type="email" id="login-email" placeholder="you@example.com">
+                        <div class="field-error" id="err-login-email">Valid email is required.</div>
+                    </div>
+                    <div class="field">
+                        <label class="fl">Mobile Number <span class="req">*</span></label>
+                        <input type="tel" id="login-phone" placeholder="+91 99999 99999">
+                        <div class="field-error" id="err-login-phone">Valid mobile number required.</div>
+                    </div>
+                    <button class="btn btn-primary" style="width:100%;margin-top:8px;background:var(--success);"
+                        onclick="startLogin()">Login &amp; Get OTP →</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================
+         PAGE 2: REGISTRATION SUCCESS (show Donor ID)
+    =================================================================== -->
+    <div class="page" id="page-reg-success">
+        <div class="landing-hero" style="padding:60px 5vw 80px;">
+            <div class="landing-hero-inner">
+                <div class="hero-badge">✅ Registration Successful</div>
+                <h1>Welcome to LifeGive!</h1>
+                <p>Your donor account has been created. Please save your Donor ID — you'll need it to log in and fill
+                    your donation form.</p>
+            </div>
+        </div>
+        <div style="max-width:500px;margin:-30px auto 60px;padding:0 5vw;position:relative;z-index:10;">
+            <div class="panel">
+                <div class="success-icon" style="width:70px;height:70px;font-size:2rem;margin:0 auto 20px;">✓</div>
+                <div class="id-display">
+                    <small>Your Unique Donor ID</small>
+                    <strong id="new-donor-id-display"></strong>
+                    <div class="id-note">📋 Save this ID. You need it to log in.</div>
+                </div>
+                <div class="info-box success-box" style="margin-top:16px;">
+                    <span class="icon">📧</span>
+                    <span>Your Donor ID and confirmation have been sent to your registered email address.</span>
+                </div>
+                <div style="margin-top:24px;display:flex;flex-direction:column;gap:12px;">
+                    <button class="btn btn-primary" onclick="goToLoginAfterReg()">Proceed to Login &amp; Fill Form
+                        →</button>
+                    <button class="btn btn-secondary" onclick="goToLanding()">← Back to Home</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================
+         PAGE 3: DONATION FORM (with progress bar)
+    =================================================================== -->
+    <div class="page" id="page-form">
+
+        <!-- Donor Banner -->
+        <div class="donor-banner" id="donorBanner">
+            <div class="donor-banner-info">
+                <small>Logged in as</small>
+                <strong id="banner-name"></strong>
+            </div>
+            <div class="donor-banner-id" id="banner-id"></div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-wrap">
+            <div class="progress-steps">
+                <div class="step-item active" id="ps1">
+                    <div class="step-num">1</div><span class="step-label">Personal Info</span>
+                </div>
+                <div class="step-item" id="ps2">
+                    <div class="step-num">2</div><span class="step-label">Medical History</span>
+                </div>
+                <div class="step-item" id="ps3">
+                    <div class="step-num">3</div><span class="step-label">Screening</span>
+                </div>
+                <div class="step-item" id="ps4">
+                    <div class="step-num">4</div><span class="step-label">Consent</span>
+                </div>
+            </div>
+        </div>
+
+        <main>
+
+            <!-- ===== STEP 1: PERSONAL INFO ===== -->
+            <div class="form-step active" id="step1">
+                <div class="step-title">Personal Information</div>
+                <div class="step-subtitle">Tell us about yourself so we can create your donor profile.</div>
+
+                <div class="card">
+                    <div class="card-title">Basic Details</div>
+                    <div class="form-grid">
+                        <div class="field col-span-2">
+                            <label class="fl">Full Name <span class="req">*</span></label>
+                            <input type="text" id="fullName" placeholder="As on your ID document">
+                            <div class="field-error" id="err-fullName">Full name is required.</div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Date of Birth <span class="req">*</span></label>
+                            <input type="date" id="dob" onchange="calcAge()">
+                            <div id="ageBadge" class="age-badge" style="display:none"></div>
+                            <div class="field-error" id="err-dob">Date of birth is required.</div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Gender <span class="req">*</span></label>
+                            <select id="gender">
+                                <option value="">Select gender</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                                <option>Other</option>
+                                <option>Prefer not to say</option>
+                            </select>
+                            <div class="field-error" id="err-gender">Please select your gender.</div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Blood Group</label>
+                            <select id="bloodGroup">
+                                <option value="">Unknown / Not sure</option>
+                                <option>A+</option>
+                                <option>A-</option>
+                                <option>B+</option>
+                                <option>B-</option>
+                                <option>AB+</option>
+                                <option>AB-</option>
+                                <option>O+</option>
+                                <option>O-</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Phone Number <span class="req">*</span></label>
+                            <input type="tel" id="phone" placeholder="+91 99999 99999">
+                            <div class="field-error" id="err-phone">Valid phone number required.</div>
+                        </div>
+                        <div class="field col-span-2">
+                            <label class="fl">Email Address <span class="req">*</span></label>
+                            <input type="email" id="email" placeholder="you@example.com">
+                            <div class="field-error" id="err-email">Valid email address required.</div>
+                        </div>
+                        <div class="field col-span-2">
+                            <label class="fl">Full Address</label>
+                            <textarea id="address" placeholder="House no., Street, City, State, PIN"></textarea>
+                        </div>
+                         <label class="fl">District</label>
+                            <select id="district">
+                                <option value="">Unknown / Not sure</option>
+                                <option>Alipurduar</option>
+                                <option>Bankura</option>
+                                <option>Paschim Bardhaman</option>
+                                <option>Purba Bardhaman</option>
+                                <option>Birbhum</option>
+                                <option>Cooch Behar</option>
+                                <option>Dakshin Dinajpur</option>
+                                <option>Darjeeling</option>
+                                <option>Hooghly</option>
+                                <option>Howrah</option>
+                                <option>Jalpaiguri</option>
+                                <option>Jhargram</option>
+                                <option>Kalimpong</option>
+                                <option>Kolkata</option>
+                                <option>Malda</option>
+                                <option>Murshidabad</option>
+                                <option>Nadia</option>
+                                <option>North 24 Parganas</option>
+                                <option>South 24 Parganas</option>
+                                <option>Paschim Medinipur</option>
+                                <option>Purba Medinipur</option>
+                                <option>Purulia</option>
+                                <option>Uttar Dinajpur</option>
+                            </select>
+                        <div class="field">
+                            <label class="fl">Identification Number <span
+                                    style="font-weight:300;color:var(--mid)">(optional)</span></label>
+                            <input type="text" id="idNumber" placeholder="Aadhar / Passport / Driving License">
+                        </div>
+                        <div class="field">
+                            <label class="fl">Occupation <span
+                                    style="font-weight:300;color:var(--mid)">(optional)</span></label>
+                            <input type="text" id="occupation" placeholder="e.g. Teacher, Engineer, Student">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Physical Criteria</div>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label class="fl">Weight (kg) <span class="req">*</span></label>
+                            <input type="number" id="weight" placeholder="Min. 50 kg" min="1">
+                            <div class="field-error" id="err-weight">Minimum weight is 50 kg to be eligible.</div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Height (cm) <span
+                                    style="font-weight:300;color:var(--mid)">(optional)</span></label>
+                            <input type="number" id="height" placeholder="e.g. 165">
+                        </div>
+                        <div class="field col-span-2">
+                            <div class="info-box">
+                                <span class="icon">ℹ️</span>
+                                <span><strong>Hemoglobin, Blood Pressure & Pulse</strong> will be measured at the
+                                    donation site by our medical staff prior to donation.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="btn btn-primary" onclick="goToStep(2)">Continue →</button>
+                </div>
+            </div>
+
+            <!-- ===== STEP 2: MEDICAL HISTORY ===== -->
+            <div class="form-step" id="step2">
+                <div class="step-title">Medical History</div>
+                <div class="step-subtitle">Your health information helps ensure safe donation for you and recipients.
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Current Health Status</div>
+                    <div class="field">
+                        <label class="fl">Do you currently have any of the following? <span class="req">*</span></label>
+                        <div class="check-group" style="margin-top:8px">
+                            <label class="check-item"><input type="checkbox" name="currentHealth" value="fever">
+                                Fever</label>
+                            <label class="check-item"><input type="checkbox" name="currentHealth" value="infection">
+                                Infection / Cold / Flu</label>
+                            <label class="check-item"><input type="checkbox" name="currentHealth" value="cough">
+                                Persistent Cough</label>
+                            <label class="check-item"><input type="checkbox" name="currentHealth" value="none"> None of
+                                the above</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Chronic Conditions</div>
+                    <div class="field">
+                        <label class="fl">Do you have (or have had) any of the following?</label>
+                        <div class="check-group" style="margin-top:8px">
+                            <label class="check-item"><input type="checkbox" name="chronic" value="heart"> Heart
+                                Disease</label>
+                            <label class="check-item"><input type="checkbox" name="chronic" value="cancer">
+                                Cancer</label>
+                            <label class="check-item"><input type="checkbox" name="chronic" value="kidney"> Kidney
+                                Disease</label>
+                            <label class="check-item"><input type="checkbox" name="chronic" value="liver"> Liver
+                                Disease</label>
+                            <label class="check-item"><input type="checkbox" name="chronic" value="diabetes">
+                                Diabetes</label>
+                            <label class="check-item"><input type="checkbox" name="chronic" value="hypertension">
+                                Hypertension</label>
+                            <label class="check-item"><input type="checkbox" name="chronic" value="hemophilia">
+                                Hemophilia</label>
+                            <label class="check-item"><input type="checkbox" name="chronic" value="anemia">
+                                Anemia</label>
+                            <label class="check-item"><input type="checkbox" name="chronic" value="none"> None</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Surgery & Medications</div>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label class="fl">Past surgeries? <span class="req">*</span></label>
+                            <div class="yn-group">
+                                <label class="check-item"><input type="radio" name="surgery" value="no" checked>
+                                    No</label>
+                                <label class="check-item"><input type="radio" name="surgery" value="yes"> Yes</label>
+                            </div>
+                        </div>
+                        <div class="field" id="surgeryDetailWrap" style="display:none">
+                            <label class="fl">Surgery details</label>
+                            <input type="text" id="surgeryDetail" placeholder="Type and approximate date">
+                        </div>
+                        <div class="field col-span-2">
+                            <label class="fl">Current medications</label>
+                            <textarea id="medications"
+                                placeholder="List any medications you are currently taking (or write 'None')"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Donation History</div>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label class="fl">Have you donated blood before?</label>
+                            <div class="yn-group">
+                                <label class="check-item"><input type="radio" name="donated" value="no" checked>
+                                    No</label>
+                                <label class="check-item"><input type="radio" name="donated" value="yes"> Yes</label>
+                            </div>
+                        </div>
+                        <div class="field" id="lastDonationWrap" style="display:none">
+                            <label class="fl">Date of last donation <span class="req">*</span></label>
+                            <input type="date" id="lastDonation" onchange="checkDonationGap()">
+                            <div class="field-error" id="err-lastDonation">Minimum 90 days since last donation required.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+                    <button class="btn btn-primary" onclick="goToStep(3)">Continue →</button>
+                </div>
+            </div>
+
+            <!-- ===== STEP 3: DISEASE SCREENING ===== -->
+            <div class="form-step" id="step3">
+                <div class="step-title">Disease Screening & Lifestyle</div>
+                <div class="step-subtitle">This information is strictly confidential and used only for safety screening.
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Infectious Disease History</div>
+                    <div class="form-grid cols-1">
+                        <div class="field">
+                            <label class="fl">Have you ever been diagnosed with or tested positive for HIV/AIDS?</label>
+                            <div class="yn-group"><label class="check-item"><input type="radio" name="hiv" value="no"
+                                        checked> No</label><label class="check-item"><input type="radio" name="hiv"
+                                        value="yes"> Yes</label></div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Hepatitis B or C?</label>
+                            <div class="yn-group"><label class="check-item"><input type="radio" name="hepatitis"
+                                        value="no" checked> No</label><label class="check-item"><input type="radio"
+                                        name="hepatitis" value="yes"> Yes</label></div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Syphilis?</label>
+                            <div class="yn-group"><label class="check-item"><input type="radio" name="syphilis"
+                                        value="no" checked> No</label><label class="check-item"><input type="radio"
+                                        name="syphilis" value="yes"> Yes</label></div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Malaria (in the past 3 years)?</label>
+                            <div class="yn-group"><label class="check-item"><input type="radio" name="malaria"
+                                        value="no" checked> No</label><label class="check-item"><input type="radio"
+                                        name="malaria" value="yes"> Yes</label></div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Tuberculosis (TB)?</label>
+                            <div class="yn-group"><label class="check-item"><input type="radio" name="tb" value="no"
+                                        checked> No</label><label class="check-item"><input type="radio" name="tb"
+                                        value="yes"> Yes</label></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Vaccinations & Travel</div>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label class="fl">Recent vaccinations in past 4 weeks?</label>
+                            <div class="yn-group"><label class="check-item"><input type="radio" name="vaccine"
+                                        value="no" checked> No</label><label class="check-item"><input type="radio"
+                                        name="vaccine" value="yes"> Yes</label></div>
+                        </div>
+                        <div class="field" id="vaccineDetailWrap" style="display:none">
+                            <label class="fl">Vaccine name & date</label>
+                            <input type="text" id="vaccineDetail" placeholder="e.g. COVID-19 (Jan 2025)">
+                        </div>
+                        <div class="field">
+                            <label class="fl">Recent travel to malaria-endemic areas?</label>
+                            <div class="yn-group"><label class="check-item"><input type="radio" name="travel" value="no"
+                                        checked> No</label><label class="check-item"><input type="radio" name="travel"
+                                        value="yes"> Yes</label></div>
+                        </div>
+                        <div class="field" id="travelDetailWrap" style="display:none">
+                            <label class="fl">Country / region & travel date</label>
+                            <input type="text" id="travelDetail" placeholder="e.g. Sub-Saharan Africa, Dec 2024">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="specialCondCard">
+                    <div class="card-title">Special Conditions (if applicable)</div>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label class="fl">Currently pregnant?</label>
+                            <div class="yn-group"><label class="check-item"><input type="radio" name="pregnant"
+                                        value="na" checked> N/A</label><label class="check-item"><input type="radio"
+                                        name="pregnant" value="no"> No</label><label class="check-item"><input
+                                        type="radio" name="pregnant" value="yes"> Yes</label></div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Currently breastfeeding?</label>
+                            <div class="yn-group"><label class="check-item"><input type="radio" name="breastfeeding"
+                                        value="na" checked> N/A</label><label class="check-item"><input type="radio"
+                                        name="breastfeeding" value="no"> No</label><label class="check-item"><input
+                                        type="radio" name="breastfeeding" value="yes"> Yes</label></div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Last childbirth date (if applicable)</label>
+                            <input type="date" id="lastChildbirth">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Lifestyle & Risk Assessment</div>
+                    <div class="confidential-box">🔒 The following questions are strictly confidential. This information
+                        is collected solely to protect the safety of blood recipients. Your answers will not affect your
+                        registration or be shared with anyone outside the medical team.</div>
+                    <div class="form-grid cols-1" style="gap:16px">
+                        <div class="field">
+                            <label class="fl">Have you used injectable drugs (non-prescribed) in the past 12
+                                months?</label>
+                            <div class="yn-group"><label class="check-item"><input type="radio" name="drugs" value="no"
+                                        checked> No</label><label class="check-item"><input type="radio" name="drugs"
+                                        value="yes"> Yes</label></div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Have you engaged in high-risk sexual behavior in the past 12
+                                months?</label>
+                            <div class="yn-group"><label class="check-item"><input type="radio" name="riskyBehavior"
+                                        value="no" checked> No</label><label class="check-item"><input type="radio"
+                                        name="riskyBehavior" value="yes"> Yes</label></div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Have you consumed heavy alcohol in the past 24–48 hours?</label>
+                            <div class="yn-group"><label class="check-item"><input type="radio" name="alcohol"
+                                        value="no" checked> No</label><label class="check-item"><input type="radio"
+                                        name="alcohol" value="yes"> Yes</label></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+                    <button class="btn btn-primary" onclick="goToStep(4)">Continue →</button>
+                </div>
+            </div>
+
+            <!-- ===== STEP 4: CONSENT ===== -->
+            <div class="form-step" id="step4">
+                <div class="step-title">Declaration & Consent</div>
+                <div class="step-subtitle">Please read and agree to the following before submitting.</div>
+
+                <div class="card">
+                    <div class="card-title">Consent Statements</div>
+                    <label class="consent-item">
+                        <input type="checkbox" id="consent1">
+                        <p><strong>Truthfulness Declaration</strong>I confirm that all information provided in this form
+                            is true and accurate to the best of my knowledge. I understand that providing false
+                            information may disqualify me from donating.</p>
+                    </label>
+                    <label class="consent-item">
+                        <input type="checkbox" id="consent2">
+                        <p><strong>Donation Consent</strong>I voluntarily consent to donate blood and acknowledge that
+                            my blood will be subjected to mandatory medical testing including for infectious diseases
+                            such as HIV, Hepatitis B/C, Syphilis, and others.</p>
+                    </label>
+                    <label class="consent-item">
+                        <input type="checkbox" id="consent3">
+                        <p><strong>Data Privacy Consent</strong>I consent to my personal and medical information being
+                            stored securely for the purposes of blood donation management. My data will not be shared
+                            with third parties without my consent, except as required by law.</p>
+                    </label>
+                    <div class="field-error" id="err-consent" style="margin-top:8px">Please agree to all consent
+                        statements to proceed.</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Digital Signature</div>
+                    <div class="signature-field">
+                        <input type="text" id="signature" placeholder="Type your full name as signature">
+                        <div class="sig-label">By typing your name above, you agree to the declarations and consent to
+                            blood donation.</div>
+                    </div>
+                    <div class="field-error" id="err-signature" style="margin-top:10px">Please enter your signature to
+                        complete the form.</div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
+                    <button class="btn btn-primary btn-submit" onclick="submitForm()">Submit Form ✓</button>
+                </div>
+            </div>
+
+            <!-- ===== FORM SUCCESS ===== -->
+            <div class="form-step" id="step-success">
+                <div class="success-container">
+                    <!-- Animated particles -->
+                    <div class="particles" id="particles"></div>
+
+                    <!-- Heart pulse animation -->
+                    <div class="success-heart-wrap">
+                        <div class="success-heart">♥</div>
+                        <div class="pulse-ring ring1"></div>
+                        <div class="pulse-ring ring2"></div>
+                        <div class="pulse-ring ring3"></div>
+                    </div>
+
+                    <div class="success-badge">🎉 Form Submitted Successfully</div>
+                    <h2 class="success-title">Thank You, <span id="success-donor-name"></span>!</h2>
+                    <p class="success-msg">Your blood donation form has been received and securely saved. Our team will
+                        reach out soon with donation camp details near you.</p>
+
+                    <div class="success-id-row">
+                        <div class="success-id-box">
+                            <small>Donor ID</small>
+                            <strong id="donorIdDisplay"></strong>
+                        </div>
+                        <div class="success-id-box">
+                            <small>Blood Group</small>
+                            <strong id="success-blood"></strong>
+                        </div>
+                        <div class="success-id-box">
+                            <small>Submitted</small>
+                            <strong id="success-date"></strong>
+                        </div>
+                    </div>
+
+                    <div class="success-impact">
+                        <div class="impact-item">
+                            <span class="impact-icon">🩸</span>
+                            <span>Up to <strong>3 lives</strong> can be saved</span>
+                        </div>
+                        <div class="impact-item">
+                            <span class="impact-icon">💪</span>
+                            <span>You are a <strong>hero</strong></span>
+                        </div>
+                        <div class="impact-item">
+                            <span class="impact-icon">📞</span>
+                            <span>We will <strong>contact you</strong> soon</span>
+                        </div>
+                    </div>
+
+                    <div class="success-actions">
+                      <a href="blood_donation_card.html"> <button class="btn btn-primary btn-download" >
+                            ⬇️ Download Form Photo
+                        </button></a> 
+                       >
+                        <button class="btn btn-secondary" onclick="goToLanding()" style="margin-top:8px;">
+                            ← Back to Home
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== FOOTER ===== -->
+            <footer>
+                <div class="footer-inner">
+                    <div class="footer-brand">
+                        <div class="footer-logo">
+                            <div class="logo-drop"></div>LifeGive
+                        </div>
+                        <p>Connecting donors with those in need. Every drop counts — your donation can save up to 3
+                            lives.</p>
+                        <div class="footer-badges"><span>🔒 Secure & Confidential</span><span>🏥 Medically
+                                Verified</span></div>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Quick Links</h4>
+                        <ul>
+                            <li><a href="#">Register as Donor</a></li>
+                            <li><a href="#">Find Donation Camp</a></li>
+                            <li><a href="#">Check Eligibility</a></li>
+                            <li><a href="#">Contact Us</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Legal</h4>
+                        <ul>
+                            <li><a href="#">About Us</a></li>
+                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="#">Terms & Conditions</a></li>
+                            <li><a href="#">Medical Disclaimer</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Contact</h4>
+                        <ul>
+                            <li>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__"
+                                    data-cfemail="96e5e3e6e6f9e4e2d6fafff0f3f1ffe0f3b8f9e4f1">[email&#160;protected]</a>
+                            </li>
+                            <li>📞 1800-XXX-XXXX</li>
+                            <li>🕐 Mon–Sat, 9am–6pm</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom"><span>© 2026 LifeGive Blood Donation. All rights reserved.</span><span>Made
+                        with ❤️ to save lives</span></div>
+            </footer>
+
+            <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+            <script>
+                // =====================================================================
+                // CONFIGURATION — Replace these with your actual deployed App Script URLs
+                // =====================================================================
+                const REGISTER_SHEET_URL = "https://script.google.com/macros/s/AKfycbw35qY2THLAZGhvbnF1JZKsututWPAzwBgBOqTcIrhgsnNSkzwAJJRn3mtqq1H1zHjN7A/exec";
+                const FORM_SHEET_URL = "https://script.google.com/macros/s/AKfycbzFkwOAR8qgtugm5BlcAOk6nyfN3K5hDLxiDFZLq-l6sxJcUFSth5eOzTc2lkzXFZ0z/exec";
+                // =====================================================================
+
+                // ===== STATE =====
+                let currentPage = 'landing';
+                let currentStep = 1;
+                let otpCountdownTimer = null;
+                let otpContext = null; // 'register' | 'login'
+                let pendingDonorData = {};
+                let loggedInDonor = {}; // { donorId, name, email, phone }
+                window._ageOk = false;
+
+                // ===== PAGE NAVIGATION =====
+                function showPage(id) {
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    document.getElementById('page-' + id).classList.add('active');
+                    currentPage = id;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+
+                function goToLanding() { showPage('landing'); }
+
+                function goToLoginAfterReg() {
+                    document.getElementById('login-id').value = loggedInDonor.donorId || '';
+                    document.getElementById('login-email').value = loggedInDonor.email || '';
+                    document.getElementById('login-phone').value = loggedInDonor.phone || '';
+                    showPage('landing');
+                    setTimeout(() => { document.getElementById('login-id').scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300);
+                }
+
+                // ===== LOADING =====
+                function showLoading(text) {
+                    document.getElementById('loadingText').textContent = text || 'Processing...';
+                    document.getElementById('loadingOverlay').classList.add('show');
+                }
+                function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+
+                // ===== FIELD VALIDATION HELPERS =====
+                function showErr(id, show) {
+                    const el = document.getElementById('err-' + id);
+                    if (el) el.classList.toggle('show', show);
+                }
+                function markInvalid(id, invalid) {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.toggle('invalid', invalid);
+                }
+
+                // ===== DONOR ID GENERATOR =====
+                function generateDonorID() {
+                    const prefix = 'LG';
+                    const year = new Date().getFullYear().toString().slice(2);
+                    const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
+                    return `${prefix}${year}-${rand}`;
+                }
+
+                // =====================================================================
+                // REGISTER FLOW
+                // =====================================================================
+                function startRegister() {
+                    const name = document.getElementById('reg-name').value.trim();
+                    const email = document.getElementById('reg-email').value.trim();
+                    const phone = document.getElementById('reg-phone').value.trim();
+
+                    let valid = true;
+                    const nameOk = name.length >= 2;
+                    showErr('reg-name', !nameOk); if (!nameOk) valid = false;
+                    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+                    showErr('reg-email', !emailOk); if (!emailOk) valid = false;
+                    const phoneOk = /^[+\d\s\-]{7,15}$/.test(phone);
+                    showErr('reg-phone', !phoneOk); if (!phoneOk) valid = false;
+                    if (!valid) return;
+
+                    pendingDonorData = { name, email, phone, donorId: generateDonorID() };
+                    otpContext = 'register';
+                    sendOTP(email, name, 'register');
+                }
+
+                // =====================================================================
+                // LOGIN FLOW
+                // =====================================================================
+                function startLogin() {
+                    const donorId = document.getElementById('login-id').value.trim();
+                    const email = document.getElementById('login-email').value.trim();
+                    const phone = document.getElementById('login-phone').value.trim();
+
+                    let valid = true;
+                    const idOk = donorId.length >= 4;
+                    showErr('login-id', !idOk); if (!idOk) valid = false;
+                    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+                    showErr('login-email', !emailOk); if (!emailOk) valid = false;
+                    const phoneOk = /^[+\d\s\-]{7,15}$/.test(phone);
+                    showErr('login-phone', !phoneOk); if (!phoneOk) valid = false;
+                    if (!valid) return;
+
+                    pendingDonorData = { donorId, email, phone };
+                    otpContext = 'login';
+                    sendOTP(email, '', 'login');
+                }
+
+                // =====================================================================
+                // OTP SYSTEM
+                // =====================================================================
+                async function sendOTP(email, name, context) {
+                    showLoading('Sending OTP to your email...');
+                    try {
+                        // Try real backend first, fallback to simulated OTP
+                        const url = context === 'register' ? REGISTER_SHEET_URL : REGISTER_SHEET_URL;
+                        let otpSent = false;
+
+                        try {
+                            const res = await fetch(url, {
+                                method: 'POST',
+                                body: JSON.stringify({ action: 'sendOTP', name, email, context })
+                            });
+                            const data = await res.json();
+                            if (data.status === 'OTP_SENT') otpSent = true;
+                        } catch (e) {
+                            // Backend not configured — use client-side simulated OTP for demo
+                        }
+
+                        if (!otpSent) {
+                            // Demo mode: generate OTP client-side and store it
+                            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                            sessionStorage.setItem('pendingOTP', otp);
+                            sessionStorage.setItem('otpExpiry', Date.now() + 5 * 60 * 1000);
+                        }
+
+                        hideLoading();
+                        document.getElementById('otpEmail').textContent = email;
+                        document.getElementById('otpModalTitle').textContent = context === 'login' ? 'Verify to Login' : 'Verify Your Email';
+                        document.getElementById('otpVerifyBtn').onclick = verifyOTP;
+                        document.getElementById('otpModal').classList.add('open');
+                        clearOTPInputs();
+                        document.getElementById('otpError').classList.remove('show');
+                        if (otpSent) document.getElementById('otpError').classList.remove('show');
+                        startResendCountdown(60);
+
+                    } catch (err) {
+                        hideLoading();
+                        alert('Could not send OTP. Please try again.');
+                    }
+                }
+
+                async function verifyOTP() {
+                    const entered = Array.from(document.querySelectorAll('.otp-digit')).map(i => i.value).join('');
+                    if (entered.length !== 6) {
+                        document.getElementById('otpError').textContent = '⚠️ Please enter all 6 digits.';
+                        document.getElementById('otpError').classList.add('show');
+                        return;
+                    }
+
+                    showLoading('Verifying...');
+
+                    let verified = false;
+
+                    // Try backend verification
+                    try {
+                        const res = await fetch(REGISTER_SHEET_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ action: 'verifyOTP', email: pendingDonorData.email, otp: entered })
+                        });
+                        const data = await res.json();
+                        if (data.status === 'VERIFIED') verified = true;
+                    } catch (e) {
+                        // Backend not configured — check sessionStorage (demo mode)
+                        const storedOTP = sessionStorage.getItem('pendingOTP');
+                        const expiry = parseInt(sessionStorage.getItem('otpExpiry') || '0');
+                        if (storedOTP && entered === storedOTP && Date.now() < expiry) {
+                            verified = true;
+                        }
+                    }
+
+                    hideLoading();
+
+                    if (verified) {
+                        document.getElementById('otpModal').classList.remove('open');
+                        sessionStorage.removeItem('pendingOTP');
+                        sessionStorage.removeItem('otpExpiry');
+                        if (otpContext === 'register') onRegisterVerified();
+                        else onLoginVerified();
+                    } else {
+                        document.getElementById('otpError').textContent = '❌ Incorrect or expired OTP. Please try again.';
+                        document.getElementById('otpError').classList.add('show');
+                    }
+                }
+
+                async function resendOTP() {
+                    clearOTPInputs();
+                    document.getElementById('otpError').classList.remove('show');
+                    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                    sessionStorage.setItem('pendingOTP', otp);
+                    sessionStorage.setItem('otpExpiry', Date.now() + 5 * 60 * 1000);
+                    startResendCountdown(60);
+                    try {
+                        await fetch(REGISTER_SHEET_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ action: 'sendOTP', email: pendingDonorData.email, context: otpContext })
+                        });
+                    } catch (e) { }
+                }
+
+                function clearOTPInputs() {
+                    document.querySelectorAll('.otp-digit').forEach(i => i.value = '');
+                    document.querySelectorAll('.otp-digit')[0].focus();
+                }
+
+                function startResendCountdown(seconds) {
+                    if (otpCountdownTimer) clearInterval(otpCountdownTimer);
+                    const el = document.getElementById('resendCountdown');
+                    const link = document.getElementById('resendLink');
+                    link.style.pointerEvents = 'none'; link.style.opacity = '0.4';
+                    let s = seconds;
+                    el.textContent = `(${s}s)`;
+                    otpCountdownTimer = setInterval(() => {
+                        s--;
+                        if (s <= 0) {
+                            clearInterval(otpCountdownTimer);
+                            el.textContent = '';
+                            link.style.pointerEvents = ''; link.style.opacity = '';
+                        } else { el.textContent = `(${s}s)`; }
+                    }, 1000);
+                }
+
+                // OTP digit auto-advance
+                document.querySelectorAll('.otp-digit').forEach((input, index, inputs) => {
+                    input.addEventListener('input', () => {
+                        input.value = input.value.replace(/\D/, '');
+                        if (input.value && index < inputs.length - 1) inputs[index + 1].focus();
+                    });
+                    input.addEventListener('keydown', e => {
+                        if (e.key === 'Backspace' && !input.value && index > 0) inputs[index - 1].focus();
+                        if (e.key === 'Enter') verifyOTP();
+                    });
+                });
+
+                // =====================================================================
+                // AFTER REGISTRATION VERIFIED
+                // =====================================================================
+                async function onRegisterVerified() {
+                    const { donorId, name, email, phone } = pendingDonorData;
+                    loggedInDonor = { donorId, name, email, phone };
+
+                    // Save to Google Sheet (Donors sheet: ID, Name, Email, Phone, Timestamp)
+                    const payload = { action: 'registerDonor', donorId, name, email, phone, registeredAt: new Date().toISOString() };
+                    saveToSheet(REGISTER_SHEET_URL, payload);
+
+                    document.getElementById('new-donor-id-display').textContent = donorId;
+                    showPage('reg-success');
+                }
+
+                // =====================================================================
+                // AFTER LOGIN VERIFIED
+                // =====================================================================
+                async function onLoginVerified() {
+                    const { donorId, email, phone } = pendingDonorData;
+
+                    // Fetch donor name from sheet if available
+                    let name = '';
+                    try {
+                        const res = await fetch(`${REGISTER_SHEET_URL}?action=getDonor&donorId=${encodeURIComponent(donorId)}&email=${encodeURIComponent(email)}`);
+                        const data = await res.json();
+                        if (data.status === 'FOUND') name = data.name || '';
+                    } catch (e) { name = ''; }
+
+                    loggedInDonor = { donorId, name: name || 'Donor', email, phone };
+
+                    // Pre-fill form fields
+                    document.getElementById('fullName').value = name || '';
+                    document.getElementById('email').value = email;
+                    document.getElementById('phone').value = phone;
+                    document.getElementById('banner-name').textContent = name || 'Donor';
+                    document.getElementById('banner-id').textContent = donorId;
+                    document.getElementById('donorIdDisplay').textContent = donorId;
+
+                    showPage('form');
+                    goToStep(1);
+                }
+
+                // =====================================================================
+                // FORM STEP NAVIGATION
+                // =====================================================================
+                function goToStep(step) {
+                    if (step > currentStep && !validateStep(currentStep)) return;
+
+                    document.getElementById('step' + currentStep)?.classList.remove('active');
+                    document.getElementById('step' + step)?.classList.add('active');
+
+                    for (let i = 1; i <= 4; i++) {
+                        const ps = document.getElementById('ps' + i);
+                        if (!ps) continue;
+                        ps.classList.remove('active', 'done');
+                        if (i < step) ps.classList.add('done');
+                        else if (i === step) ps.classList.add('active');
+                    }
+
+                    currentStep = step;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+
+                function validateStep(step) {
+                    let valid = true;
+
+                    if (step === 1) {
+                        const name = document.getElementById('fullName').value.trim();
+                        const dob = document.getElementById('dob').value;
+                        const gender = document.getElementById('gender').value;
+                        const phone = document.getElementById('phone').value.trim();
+                        const email = document.getElementById('email').value.trim();
+                        const weight = parseFloat(document.getElementById('weight').value);
+
+                        const nameOk = name.length >= 2;
+                        showErr('fullName', !nameOk); markInvalid('fullName', !nameOk);
+                        if (!nameOk) valid = false;
+
+                        const dobOk = dob && window._ageOk;
+                        showErr('dob', !dobOk); markInvalid('dob', !dobOk);
+                        if (!dobOk) valid = false;
+
+                        const genderOk = gender !== '';
+                        showErr('gender', !genderOk); markInvalid('gender', !genderOk);
+                        if (!genderOk) valid = false;
+
+                        const phoneOk = /^[+\d\s\-]{7,15}$/.test(phone);
+                        showErr('phone', !phoneOk); markInvalid('phone', !phoneOk);
+                        if (!phoneOk) valid = false;
+
+                        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+                        showErr('email', !emailOk); markInvalid('email', !emailOk);
+                        if (!emailOk) valid = false;
+
+                        const weightOk = !isNaN(weight) && weight >= 50;
+                        showErr('weight', !weightOk); markInvalid('weight', !weightOk);
+                        if (!weightOk) valid = false;
+                    }
+
+                    if (step === 2) {
+                        const donated = document.querySelector('input[name="donated"]:checked')?.value;
+                        if (donated === 'yes') {
+                            const lastDon = document.getElementById('lastDonation').value;
+                            const gap = lastDon ? Math.floor((new Date() - new Date(lastDon)) / 86400000) : 0;
+                            const gapOk = lastDon && gap >= 90;
+                            showErr('lastDonation', !gapOk); markInvalid('lastDonation', !gapOk);
+                            if (!gapOk) valid = false;
+                        }
+                    }
+
+                    if (step === 4) {
+                        const c1 = document.getElementById('consent1').checked;
+                        const c2 = document.getElementById('consent2').checked;
+                        const c3 = document.getElementById('consent3').checked;
+                        const sig = document.getElementById('signature').value.trim();
+
+                        const consentOk = c1 && c2 && c3;
+                        showErr('consent', !consentOk);
+                        if (!consentOk) valid = false;
+
+                        const sigOk = sig.length >= 2;
+                        showErr('signature', !sigOk); markInvalid('signature', !sigOk);
+                        if (!sigOk) valid = false;
+                    }
+
+                    return valid;
+                }
+
+                // ===== AGE CALCULATION =====
+                function calcAge() {
+                    const dob = document.getElementById('dob').value;
+                    const badge = document.getElementById('ageBadge');
+                    if (!dob) { badge.style.display = 'none'; return; }
+                    const today = new Date(), birth = new Date(dob);
+                    let age = today.getFullYear() - birth.getFullYear();
+                    const m = today.getMonth() - birth.getMonth();
+                    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                    badge.style.display = 'inline-block';
+                    if (age >= 18 && age <= 65) {
+                        badge.textContent = `Age: ${age} years — ✓ Eligible`;
+                        badge.className = 'age-badge ok'; window._ageOk = true; showErr('dob', false);
+                    } else {
+                        badge.textContent = `Age: ${age} years — ✗ Must be 18–65`;
+                        badge.className = 'age-badge fail'; window._ageOk = false;
+                    }
+                }
+
+                // ===== DONATION GAP =====
+                function checkDonationGap() {
+                    const lastDon = document.getElementById('lastDonation').value;
+                    if (!lastDon) return;
+                    const gap = Math.floor((new Date() - new Date(lastDon)) / 86400000);
+                    const ok = gap >= 90;
+                    showErr('lastDonation', !ok); markInvalid('lastDonation', !ok);
+                }
+
+                // ===== DYNAMIC SHOW/HIDE =====
+                document.querySelectorAll('input[name="surgery"]').forEach(r => {
+                    r.addEventListener('change', () => { document.getElementById('surgeryDetailWrap').style.display = r.value === 'yes' ? 'block' : 'none'; });
+                });
+                document.querySelectorAll('input[name="donated"]').forEach(r => {
+                    r.addEventListener('change', () => { document.getElementById('lastDonationWrap').style.display = r.value === 'yes' ? 'block' : 'none'; });
+                });
+                document.querySelectorAll('input[name="vaccine"]').forEach(r => {
+                    r.addEventListener('change', () => { document.getElementById('vaccineDetailWrap').style.display = r.value === 'yes' ? 'block' : 'none'; });
+                });
+                document.querySelectorAll('input[name="travel"]').forEach(r => {
+                    r.addEventListener('change', () => { document.getElementById('travelDetailWrap').style.display = r.value === 'yes' ? 'block' : 'none'; });
+                });
+
+                // =====================================================================
+                // SUBMIT FORM (Step 4 → OTP → Save full form to sheet)
+                // =====================================================================
+                function submitForm() {
+                    if (!validateStep(4)) return;
+                    showLoading('Submitting your form...');
+                    setTimeout(() => {
+                        hideLoading();
+                        saveFormAndShowSuccess();
+                    }, 800);
+                }
+
+                // =====================================================================
+                // COLLECT ALL FORM DATA & SAVE TO SHEET
+                // =====================================================================
+                function collectFormData() {
+                    const getRadio = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+                    const getCheckboxes = name => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(c => c.value).join(', ');
+
+                    return {
+                        donorId: loggedInDonor.donorId,
+                        submittedAt: new Date().toLocaleString(),
+                        // Step 1
+                        fullName: document.getElementById('fullName').value,
+                        dob: document.getElementById('dob').value,
+                        gender: document.getElementById('gender').value,
+                        bloodGroup: document.getElementById('bloodGroup').value,
+                        phone: document.getElementById('phone').value,
+                        email: document.getElementById('email').value,
+                        address: document.getElementById('address').value,
+                        district: document.getElementById('district').value,
+                        idNumber: document.getElementById('idNumber').value,
+                        occupation: document.getElementById('occupation').value,
+                        weight: document.getElementById('weight').value,
+                        height: document.getElementById('height').value,
+                        // Step 2
+                        currentHealth: getCheckboxes('currentHealth'),
+                        chronic: getCheckboxes('chronic'),
+                        surgery: getRadio('surgery'),
+                        surgeryDetail: document.getElementById('surgeryDetail').value,
+                        medications: document.getElementById('medications').value,
+                        donated: getRadio('donated'),
+                        lastDonation: document.getElementById('lastDonation').value,
+                        // Step 3
+                        hiv: getRadio('hiv'),
+                        hepatitis: getRadio('hepatitis'),
+                        syphilis: getRadio('syphilis'),
+                        malaria: getRadio('malaria'),
+                        tb: getRadio('tb'),
+                        vaccine: getRadio('vaccine'),
+                        vaccineDetail: document.getElementById('vaccineDetail').value,
+                        travel: getRadio('travel'),
+                        travelDetail: document.getElementById('travelDetail').value,
+                        pregnant: getRadio('pregnant'),
+                        breastfeeding: getRadio('breastfeeding'),
+                        lastChildbirth: document.getElementById('lastChildbirth').value,
+                        drugs: getRadio('drugs'),
+                        riskyBehavior: getRadio('riskyBehavior'),
+                        alcohol: getRadio('alcohol'),
+                        // Step 4
+                        consent1: document.getElementById('consent1').checked,
+                        consent2: document.getElementById('consent2').checked,
+                        consent3: document.getElementById('consent3').checked,
+                        signature: document.getElementById('signature').value,
+                    };
+                }
+
+                function saveFormAndShowSuccess() {
+                    const formData = collectFormData();
+
+                    // Show success immediately
+                    document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+                    document.querySelector('.progress-wrap').style.display = 'none';
+                    document.getElementById('step-success').classList.add('active');
+                    document.getElementById('donorIdDisplay').textContent = loggedInDonor.donorId;
+                    document.getElementById('success-donor-name').textContent = loggedInDonor.name || 'Donor';
+                    document.getElementById('success-blood').textContent = document.getElementById('bloodGroup').value || '—';
+                    document.getElementById('success-date').textContent = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                    // Save to Form Submissions sheet silently
+                    saveToSheet(FORM_SHEET_URL, { action: 'saveForm', ...formData });
+                }
+
+                // =====================================================================
+                // GOOGLE SHEETS SAVE (fire & forget)
+                // =====================================================================
+                function saveToSheet(url, payload) {
+                    fetch(url, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }).catch(err => console.log('Sheet save note:', err));
+                }
+
+            </script>
+        </main>
+    </div>
+</body>
+
+</html>

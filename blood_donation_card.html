@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Donor Card Generator</title>
+
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+    }
+
+    input {
+      padding: 8px;
+      width: 250px;
+      margin: 5px;
+    }
+
+    button {
+      padding: 10px 15px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .card {
+      width: 350px;
+      padding: 15px;
+      border: 2px solid black;
+      border-radius: 10px;
+      margin: 20px auto;
+      text-align: left;
+      background: #f2f2f2;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>Donor Card Generator</h2>
+
+<input type="text" id="donorId" placeholder="Enter Donor ID"><br>
+<input type="email" id="email" placeholder="Enter Email"><br>
+
+<button onclick="generateCard()">Generate Card</button>
+
+<div id="cardContainer"></div>
+
+<button id="downloadBtn" style="display:none;" onclick="downloadCard()">Download Card</button>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbyAkikzthzXS0OwWdl0hO_o5VgjGY_xlTdAGNXYBk6JZNBmwXVOm8mOB2EyKsc0y1YF/exec";
+
+async function generateCard() {
+    const donorId = document.getElementById("donorId").value;
+    const email = document.getElementById("email").value;
+
+    try {
+        const res = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+            },
+            body: JSON.stringify({ donorId, email })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            document.getElementById("cardContainer").innerHTML = `
+                <div class="card" id="card">
+                    <h3>Donor Card</h3>
+                    <p><b>ID:</b> ${data.user.donorId}</p>
+                    <p><b>Name:</b> ${data.user.fullName}</p>
+                    <p><b>DOB:</b> ${data.user.dob}</p>
+                    <p><b>Gender:</b> ${data.user.gender}</p>
+                    <p><b>Blood Group:</b> ${data.user.bloodGroup}</p>
+                    <p><b>Phone:</b> ${data.user.phone}</p>
+                    <p><b>Email:</b> ${data.user.email}</p>
+                    <p><b>Address:</b> ${data.user.address}</p>
+                    <p><b>District:</b> ${data.user.district}</p>
+                    <p><b>ID Number:</b> ${data.user.idNumber}</p>
+                </div>
+            `;
+
+            document.getElementById("downloadBtn").style.display = "inline-block";
+
+        } else {
+            alert("❌ Invalid Donor ID or Email");
+        }
+
+    } catch (err) {
+        alert("⚠️ Error connecting to server");
+        console.error(err);
+    }
+}
+
+function downloadCard() {
+    const card = document.getElementById("card");
+
+    html2canvas(card).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "donor_card.png";
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+}
+</script>
+
+</body>
+</html>
