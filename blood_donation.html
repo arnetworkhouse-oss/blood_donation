@@ -128,6 +128,122 @@
             color: var(--mid);
         }
 
+        /* ===== INLINE CARD LOADING STATE ===== */
+        .card-loading-overlay {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+            gap: 20px;
+            min-height: 260px;
+        }
+
+        .card-loading-overlay.show {
+            display: flex;
+        }
+
+        .card-loading-overlay .card-spinner-ring {
+            width: 56px;
+            height: 56px;
+            position: relative;
+        }
+
+        .card-loading-overlay .card-spinner-ring::before,
+        .card-loading-overlay .card-spinner-ring::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+        }
+
+        .card-loading-overlay .card-spinner-ring::before {
+            border: 4px solid var(--border);
+        }
+
+        .card-loading-overlay .card-spinner-ring::after {
+            border: 4px solid transparent;
+            border-top-color: var(--red);
+            animation: spin 0.75s linear infinite;
+        }
+
+        .card-loading-overlay .card-blood-drop {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            animation: pulse-drop 1.2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-drop {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+
+            50% {
+                transform: scale(1.15);
+                opacity: 1;
+            }
+        }
+
+        .card-loading-overlay .card-loading-label {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--charcoal);
+        }
+
+        .card-loading-overlay .card-loading-sub {
+            font-size: 0.8rem;
+            color: var(--mid);
+            margin-top: -12px;
+        }
+
+        .card-loading-overlay .loading-dots span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: var(--red);
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: dot-bounce 1.2s ease-in-out infinite;
+        }
+
+        .card-loading-overlay .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .card-loading-overlay .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes dot-bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+
+            40% {
+                transform: translateY(-6px);
+                opacity: 1;
+            }
+        }
+
+        .panel-content-wrap {
+            transition: opacity 0.25s ease;
+        }
+
+        .panel-content-wrap.hide {
+            display: none;
+        }
+
         /* ===== OTP MODAL ===== */
         .modal-overlay {
             position: fixed;
@@ -1549,6 +1665,24 @@
                 color: #555;
             }
         }
+
+        @keyframes btn-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn-spinner {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: btn-spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 7px;
+        }
     </style>
 </head>
 
@@ -1643,35 +1777,50 @@
                         <input type="tel" id="reg-phone" placeholder="+91 99999 99999">
                         <div class="field-error" id="err-reg-phone">Valid mobile number required.</div>
                     </div>
-                    <button class="btn btn-primary" style="width:100%;margin-top:8px;"
+                    <button class="btn btn-primary" style="width:100%;margin-top:8px;" id="regBtn"
                         onclick="startRegister()">Register &amp; Get OTP →</button>
                 </div>
 
                 <!-- LOGIN PANEL -->
-                <div class="panel">
-                    <div class="panel-icon login">🔐</div>
-                    <h2>Donor Login</h2>
-                    <p>Already registered? Enter your Donor ID, email and mobile to receive an OTP and access your
-                        donation form.</p>
-                    <div class="panel-divider"></div>
+                <div class="panel" id="loginPanel">
+                    <!-- Inline loading state shown while fetching donor data after OTP verify -->
+                    <div class="card-loading-overlay" id="loginCardLoader">
+                        <div class="card-spinner-ring">
+                            <div class="card-blood-drop">🩸</div>
+                        </div>
+                        <div class="card-loading-label">Loading your profile…</div>
+                        <div class="loading-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="card-loading-sub">Fetching your donor details</div>
+                    </div>
 
-                    <div class="field">
-                        <label class="fl">Donor ID <span class="req">*</span></label>
-                        <input type="text" id="login-id" placeholder="e.g. LG26-XXXXX">
-                        <div class="field-error" id="err-login-id">Donor ID is required.</div>
+                    <!-- Actual login form content -->
+                    <div class="panel-content-wrap" id="loginPanelContent">
+                        <div class="panel-icon login">🔐</div>
+                        <h2>Donor Login</h2>
+                        <p>Already registered? Enter your Donor ID, email and mobile to receive an OTP and access your
+                            donation form.</p>
+                        <div class="panel-divider"></div>
+
+                        <div class="field">
+                            <label class="fl">Donor ID <span class="req">*</span></label>
+                            <input type="text" id="login-id" placeholder="e.g. LG26-XXXXX">
+                            <div class="field-error" id="err-login-id">Donor ID is required.</div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Email Address <span class="req">*</span></label>
+                            <input type="email" id="login-email" placeholder="you@example.com">
+                            <div class="field-error" id="err-login-email">Valid email is required.</div>
+                        </div>
+                        <div class="field">
+                            <label class="fl">Mobile Number <span class="req">*</span></label>
+                            <input type="tel" id="login-phone" placeholder="+91 99999 99999">
+                            <div class="field-error" id="err-login-phone">Valid mobile number required.</div>
+                        </div>
+                        <button class="btn btn-primary" style="width:100%;margin-top:8px;background:var(--success);"
+                            id="loginBtn" onclick="startLogin()">Login &amp; Get OTP →</button>
                     </div>
-                    <div class="field">
-                        <label class="fl">Email Address <span class="req">*</span></label>
-                        <input type="email" id="login-email" placeholder="you@example.com">
-                        <div class="field-error" id="err-login-email">Valid email is required.</div>
-                    </div>
-                    <div class="field">
-                        <label class="fl">Mobile Number <span class="req">*</span></label>
-                        <input type="tel" id="login-phone" placeholder="+91 99999 99999">
-                        <div class="field-error" id="err-login-phone">Valid mobile number required.</div>
-                    </div>
-                    <button class="btn btn-primary" style="width:100%;margin-top:8px;background:var(--success);"
-                        onclick="startLogin()">Login &amp; Get OTP →</button>
                 </div>
 
             </div>
@@ -1696,6 +1845,15 @@
                 <div class="id-display">
                     <small>Your Unique Donor ID</small>
                     <strong id="new-donor-id-display"></strong>
+                    <button onclick="copyDonorId()" id="copyDonorBtn"
+                        style="margin-top:10px;padding:6px 16px;font-size:13px;cursor:pointer;border:1.5px solid #c0392b;border-radius:20px;background:white;color:#c0392b;display:inline-flex;align-items:center;gap:6px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                        <span id="copyDonorBtnText">Copy ID</span>
+                    </button>
                     <div class="id-note">📋 Save this ID. You need it to log in.</div>
                 </div>
                 <div class="info-box success-box" style="margin-top:16px;">
@@ -1803,33 +1961,33 @@
                             <label class="fl">Full Address</label>
                             <textarea id="address" placeholder="House no., Street, City, State, PIN"></textarea>
                         </div>
-                         <label class="fl">District</label>
-                            <select id="district">
-                                <option value="">Unknown / Not sure</option>
-                                <option>Alipurduar</option>
-                                <option>Bankura</option>
-                                <option>Paschim Bardhaman</option>
-                                <option>Purba Bardhaman</option>
-                                <option>Birbhum</option>
-                                <option>Cooch Behar</option>
-                                <option>Dakshin Dinajpur</option>
-                                <option>Darjeeling</option>
-                                <option>Hooghly</option>
-                                <option>Howrah</option>
-                                <option>Jalpaiguri</option>
-                                <option>Jhargram</option>
-                                <option>Kalimpong</option>
-                                <option>Kolkata</option>
-                                <option>Malda</option>
-                                <option>Murshidabad</option>
-                                <option>Nadia</option>
-                                <option>North 24 Parganas</option>
-                                <option>South 24 Parganas</option>
-                                <option>Paschim Medinipur</option>
-                                <option>Purba Medinipur</option>
-                                <option>Purulia</option>
-                                <option>Uttar Dinajpur</option>
-                            </select>
+                        <label class="fl">District</label>
+                        <select id="district">
+                            <option value="">Unknown / Not sure</option>
+                            <option>Alipurduar</option>
+                            <option>Bankura</option>
+                            <option>Paschim Bardhaman</option>
+                            <option>Purba Bardhaman</option>
+                            <option>Birbhum</option>
+                            <option>Cooch Behar</option>
+                            <option>Dakshin Dinajpur</option>
+                            <option>Darjeeling</option>
+                            <option>Hooghly</option>
+                            <option>Howrah</option>
+                            <option>Jalpaiguri</option>
+                            <option>Jhargram</option>
+                            <option>Kalimpong</option>
+                            <option>Kolkata</option>
+                            <option>Malda</option>
+                            <option>Murshidabad</option>
+                            <option>Nadia</option>
+                            <option>North 24 Parganas</option>
+                            <option>South 24 Parganas</option>
+                            <option>Paschim Medinipur</option>
+                            <option>Purba Medinipur</option>
+                            <option>Purulia</option>
+                            <option>Uttar Dinajpur</option>
+                        </select>
                         <div class="field">
                             <label class="fl">Identification Number <span
                                     style="font-weight:300;color:var(--mid)">(optional)</span></label>
@@ -1883,14 +2041,10 @@
                     <div class="field">
                         <label class="fl">Do you currently have any of the following? <span class="req">*</span></label>
                         <div class="check-group" style="margin-top:8px">
-                            <label class="check-item"><input type="checkbox" name="currentHealth" value="fever">
-                                Fever</label>
-                            <label class="check-item"><input type="checkbox" name="currentHealth" value="infection">
-                                Infection / Cold / Flu</label>
-                            <label class="check-item"><input type="checkbox" name="currentHealth" value="cough">
-                                Persistent Cough</label>
-                            <label class="check-item"><input type="checkbox" name="currentHealth" value="none"> None of
-                                the above</label>
+                            <input type="checkbox" name="currentHealth" value="fever"> Fever
+                            <input type="checkbox" name="currentHealth" value="cold"> Infection / Cold / Flu
+                            <input type="checkbox" name="currentHealth" value="cough"> Persistent Cough
+                            <input type="checkbox" name="currentHealth" value="none"> None of the above
                         </div>
                     </div>
                 </div>
@@ -1900,23 +2054,9 @@
                     <div class="field">
                         <label class="fl">Do you have (or have had) any of the following?</label>
                         <div class="check-group" style="margin-top:8px">
-                            <label class="check-item"><input type="checkbox" name="chronic" value="heart"> Heart
-                                Disease</label>
-                            <label class="check-item"><input type="checkbox" name="chronic" value="cancer">
-                                Cancer</label>
-                            <label class="check-item"><input type="checkbox" name="chronic" value="kidney"> Kidney
-                                Disease</label>
-                            <label class="check-item"><input type="checkbox" name="chronic" value="liver"> Liver
-                                Disease</label>
-                            <label class="check-item"><input type="checkbox" name="chronic" value="diabetes">
-                                Diabetes</label>
-                            <label class="check-item"><input type="checkbox" name="chronic" value="hypertension">
-                                Hypertension</label>
-                            <label class="check-item"><input type="checkbox" name="chronic" value="hemophilia">
-                                Hemophilia</label>
-                            <label class="check-item"><input type="checkbox" name="chronic" value="anemia">
-                                Anemia</label>
-                            <label class="check-item"><input type="checkbox" name="chronic" value="none"> None</label>
+                            <input type="checkbox" name="chronic" value="heart"> Heart Disease
+                            <input type="checkbox" name="chronic" value="cancer"> Cancer
+                            <input type="checkbox" name="chronic" value="none"> None
                         </div>
                     </div>
                 </div>
@@ -2193,10 +2333,10 @@
                     </div>
 
                     <div class="success-actions">
-                      <a href="blood_donation_card.html"> <button class="btn btn-primary btn-download" >
-                            ⬇️ Download Form Photo
-                        </button></a> 
-                       >
+                        <a href="blood_donation_card.html"> <button class="btn btn-primary btn-download">
+                                ⬇️ Download Form Image
+                            </button></a>
+                        >
                         <button class="btn btn-secondary" onclick="goToLanding()" style="margin-top:8px;">
                             ← Back to Home
                         </button>
@@ -2286,6 +2426,19 @@
                 }
 
                 // ===== LOADING =====
+                function setBtnLoading(id, loading) {
+                    const btn = document.getElementById(id);
+                    if (!btn) return;
+                    if (loading) {
+                        btn._origText = btn.innerHTML;
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="btn-spinner"></span>Please wait...';
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = btn._origText || btn.innerHTML;
+                    }
+                }
+
                 function showLoading(text) {
                     document.getElementById('loadingText').textContent = text || 'Processing...';
                     document.getElementById('loadingOverlay').classList.add('show');
@@ -2329,6 +2482,7 @@
 
                     pendingDonorData = { name, email, phone, donorId: generateDonorID() };
                     otpContext = 'register';
+                    setBtnLoading('regBtn', true);
                     sendOTP(email, name, 'register');
                 }
 
@@ -2351,6 +2505,7 @@
 
                     pendingDonorData = { donorId, email, phone };
                     otpContext = 'login';
+                    setBtnLoading('loginBtn', true);
                     sendOTP(email, '', 'login');
                 }
 
@@ -2383,6 +2538,8 @@
                         }
 
                         hideLoading();
+                        setBtnLoading('regBtn', false);
+                        setBtnLoading('loginBtn', false);
                         document.getElementById('otpEmail').textContent = email;
                         document.getElementById('otpModalTitle').textContent = context === 'login' ? 'Verify to Login' : 'Verify Your Email';
                         document.getElementById('otpVerifyBtn').onclick = verifyOTP;
@@ -2394,6 +2551,8 @@
 
                     } catch (err) {
                         hideLoading();
+                        setBtnLoading('regBtn', false);
+                        setBtnLoading('loginBtn', false);
                         alert('Could not send OTP. Please try again.');
                     }
                 }
@@ -2407,6 +2566,7 @@
                     }
 
                     showLoading('Verifying...');
+                    setBtnLoading('otpVerifyBtn', true);
 
                     let verified = false;
 
@@ -2428,6 +2588,7 @@
                     }
 
                     hideLoading();
+                    setBtnLoading('otpVerifyBtn', false);
 
                     if (verified) {
                         document.getElementById('otpModal').classList.remove('open');
@@ -2493,6 +2654,50 @@
                 // =====================================================================
                 // AFTER REGISTRATION VERIFIED
                 // =====================================================================
+                // ===== COPY DONOR ID (global scope so onclick can reach it) =====
+                function copyDonorId() {
+                    const id = document.getElementById('new-donor-id-display').textContent.trim();
+                    if (!id) return;
+                    const btn = document.getElementById('copyDonorBtn');
+                    const txt = document.getElementById('copyDonorBtnText');
+
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(id).then(() => {
+                            txt.textContent = '✓ Copied!';
+                            btn.style.borderColor = '#2e7d32';
+                            btn.style.color = '#2e7d32';
+                            btn.style.background = '#f0faf1';
+                            setTimeout(() => {
+                                txt.textContent = 'Copy ID';
+                                btn.style.borderColor = '#c0392b';
+                                btn.style.color = '#c0392b';
+                                btn.style.background = 'white';
+                            }, 2000);
+                        });
+                    } else {
+                        // Fallback for non-HTTPS / older browsers
+                        const ta = document.createElement('textarea');
+                        ta.value = id;
+                        ta.style.position = 'fixed';
+                        ta.style.opacity = '0';
+                        document.body.appendChild(ta);
+                        ta.focus();
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                        txt.textContent = '✓ Copied!';
+                        btn.style.borderColor = '#2e7d32';
+                        btn.style.color = '#2e7d32';
+                        btn.style.background = '#f0faf1';
+                        setTimeout(() => {
+                            txt.textContent = 'Copy ID';
+                            btn.style.borderColor = '#c0392b';
+                            btn.style.color = '#c0392b';
+                            btn.style.background = 'white';
+                        }, 2000);
+                    }
+                }
+
                 async function onRegisterVerified() {
                     const { donorId, name, email, phone } = pendingDonorData;
                     loggedInDonor = { donorId, name, email, phone };
@@ -2511,6 +2716,10 @@
                 async function onLoginVerified() {
                     const { donorId, email, phone } = pendingDonorData;
 
+                    // Show inline card loading animation while fetching donor data
+                    document.getElementById('loginPanelContent').classList.add('hide');
+                    document.getElementById('loginCardLoader').classList.add('show');
+
                     // Fetch donor name from sheet if available
                     let name = '';
                     try {
@@ -2518,6 +2727,10 @@
                         const data = await res.json();
                         if (data.status === 'FOUND') name = data.name || '';
                     } catch (e) { name = ''; }
+
+                    // Hide card loader before transitioning to form
+                    document.getElementById('loginCardLoader').classList.remove('show');
+                    document.getElementById('loginPanelContent').classList.remove('hide');
 
                     loggedInDonor = { donorId, name: name || 'Donor', email, phone };
 
@@ -2756,6 +2969,36 @@
                         body: JSON.stringify(payload)
                     }).catch(err => console.log('Sheet save note:', err));
                 }
+
+                function handleNoneLogic(groupName, noneValue) {
+                    const checkboxes = document.querySelectorAll(`input[name="${groupName}"]`);
+
+                    checkboxes.forEach(cb => {
+                        cb.addEventListener("change", () => {
+
+                            if (cb.value === noneValue && cb.checked) {
+                                // If "None" is checked → uncheck others
+                                checkboxes.forEach(other => {
+                                    if (other.value !== noneValue) {
+                                        other.checked = false;
+                                    }
+                                });
+                            } else if (cb.value !== noneValue && cb.checked) {
+                                // If any other is checked → uncheck "None"
+                                checkboxes.forEach(other => {
+                                    if (other.value === noneValue) {
+                                        other.checked = false;
+                                    }
+                                });
+                            }
+
+                        });
+                    });
+                }
+
+                // Apply for both sections
+                handleNoneLogic("currentHealth", "none");   // Current Health Status
+                handleNoneLogic("chronic", "none");         // Chronic Conditions
 
             </script>
         </main>
