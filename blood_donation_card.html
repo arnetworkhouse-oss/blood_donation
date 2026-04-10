@@ -1,111 +1,541 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Donor Card Generator</title>
-
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Donor Card Generator — LifeGive</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #C8001E;
+      --red-dark: #A3001A;
+      --red-light: #F9E6EA;
+      --red-mid: #E8003A;
+      --white: #FFFFFF;
+      --gray-50: #FAFAFA;
+      --gray-100: #F4F4F4;
+      --gray-200: #E8E8E8;
+      --gray-400: #ABABAB;
+      --gray-600: #6B6B6B;
+      --gray-900: #1A1A1A;
+      --font: 'DM Sans', sans-serif;
+      --font-serif: 'DM Serif Display', serif;
+    }
+
     body {
-      font-family: Arial;
+      font-family: var(--font);
+      background: var(--gray-50);
+      color: var(--gray-900);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 0 2rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .nav-brand svg { width: 28px; height: 28px; }
+    .nav-brand span { font-size: 18px; font-weight: 700; color: var(--red); letter-spacing: -0.3px; }
+
+    .nav-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--red-light);
+      color: var(--red);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+
+    .nav-pill::before {
+      content: '';
+      width: 7px; height: 7px;
+      background: var(--red);
+      border-radius: 50%;
+    }
+
+    /* ── HERO STRIP ── */
+    .hero {
+      background: var(--red);
+      color: var(--white);
+      padding: 3rem 2rem 3.5rem;
       text-align: center;
+      position: relative;
+      overflow: hidden;
     }
 
-    input {
-      padding: 8px;
-      width: 250px;
-      margin: 5px;
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 50%;
+      top: -160px; right: -80px;
     }
 
-    button {
-      padding: 10px 15px;
-      cursor: pointer;
-      margin-top: 10px;
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 50%;
+      bottom: -120px; left: -60px;
     }
 
-    .card {
-      width: 350px;
-      padding: 15px;
-      border: 2px solid black;
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-bottom: 1rem;
+    }
+
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 400;
+      line-height: 1.15;
+      margin-bottom: 0.75rem;
+    }
+
+    .hero p {
+      font-size: 15px;
+      opacity: 0.8;
+      max-width: 420px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── MAIN CONTENT ── */
+    main {
+      flex: 1;
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+
+    /* ── FORM CARD ── */
+    .form-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-card h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 1.25rem;
+    }
+
+    .field { margin-bottom: 1rem; }
+    .field:last-of-type { margin-bottom: 1.5rem; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"], input[type="email"] {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--gray-200);
       border-radius: 10px;
-      margin: 20px auto;
-      text-align: left;
-      background: #f2f2f2;
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--gray-900);
+      background: var(--white);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
+
+    input[type="text"]:focus, input[type="email"]:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(200, 0, 30, 0.08);
+    }
+
+    input::placeholder { color: var(--gray-400); }
+
+    .btn-generate {
+      width: 100%;
+      padding: 13px;
+      background: var(--red);
+      color: var(--white);
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-generate:hover { background: var(--red-dark); }
+    .btn-generate:active { transform: scale(0.99); }
+
+    /* ── SPINNER ── */
+    .spinner-wrap {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 1.25rem;
+      color: var(--gray-600);
+      font-size: 14px;
+    }
+
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2.5px solid var(--gray-200);
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── ERROR ── */
+    .error-box {
+      display: none;
+      background: #FFF1F3;
+      border: 1px solid #F7C1C9;
+      color: #A3001A;
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    /* ── DONOR CARD ── */
+    .card-wrap {
+      animation: fadeUp 0.4s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: var(--red);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-header-logo { width: 36px; height: 36px; flex-shrink: 0; }
+
+   
+    .card-header-text h3 { color: var(--white); font-size: 16px; font-weight: 700; }
+    .card-header-text p  { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 2px; }
+
+    .card-id-badge {
+      margin-left: auto;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    .card-body { padding: 16px 20px; }
+
+    .card-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--gray-100);
+      gap: 12px;
+    }
+
+    .card-row:last-child { border-bottom: none; }
+
+    .card-row-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+
+    .card-row-val {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-900);
+      text-align: right;
+    }
+
+    .blood-badge {
+      background: var(--red);
+      color: var(--white);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    .card-footer {
+      background: var(--gray-50);
+      border-top: 1px solid var(--gray-100);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-footer p {
+      font-size: 11px;
+      color: var(--gray-400);
+    }
+
+    .card-footer svg { width: 18px; height: 18px; opacity: 0.4; }
+
+    /* ── DOWNLOAD BTN ── */
+    .btn-download {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      background: transparent;
+      color: var(--red);
+      border: 1.5px solid var(--red);
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .btn-download:hover { background: var(--red); color: var(--white); }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 12px;
+      color: var(--gray-400);
+      border-top: 1px solid var(--gray-200);
+      background: var(--white);
+    }
+
+    footer strong { color: var(--red); }
   </style>
 </head>
-
 <body>
 
-<h2>Donor Card Generator</h2>
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 3C16 3 5 13.5 5 20.5a11 11 0 0 0 22 0C27 13.5 16 3 16 3Z" fill="#C8001E"/>
+      <path d="M16 9C16 9 9 16.5 9 21a7 7 0 0 0 14 0C23 16.5 16 9 16 9Z" fill="white" opacity="0.2"/>
+    </svg>
+    <span>LifeGive</span>
+  </a>
+  <div class="nav-pill">Donor Portal</div>
+</nav>
 
-<input type="text" id="donorId" placeholder="Enter Donor ID"><br>
-<input type="email" id="email" placeholder="Enter Email"><br>
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">🩸 DONOR CARD GENERATOR</div>
+  <h1>Your Donor Card,<br>Instantly.</h1>
+  <p>Enter your registered Donor ID and email to generate and download your official LifeGive donor card.</p>
+</div>
 
-<button onclick="generateCard()">Generate Card</button>
+<!-- MAIN -->
+<main>
+  <div class="form-card">
+    <h2>Retrieve Your Card</h2>
 
-<div id="cardContainer"></div>
+    <div class="field">
+      <label for="donorId">Donor ID</label>
+      <input type="text" id="donorId" placeholder="e.g. LG-00123" />
+    </div>
 
-<button id="downloadBtn" style="display:none;" onclick="downloadCard()">Download Card</button>
+    <div class="field">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" placeholder="you@example.com" />
+    </div>
+
+    <button class="btn-generate" onclick="generateCard()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+      Generate My Card
+    </button>
+
+    <div class="spinner-wrap" id="spinner">
+      <div class="spinner"></div>
+      Looking up your record…
+    </div>
+
+    <div class="error-box" id="errMsg"></div>
+  </div>
+
+  <!-- CARD OUTPUT -->
+  <div id="cardContainer"></div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  Powered by <strong>LifeGive</strong> · Every donation saves up to 3 lives
+</footer>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbyAkikzthzXS0OwWdl0hO_o5VgjGY_xlTdAGNXYBk6JZNBmwXVOm8mOB2EyKsc0y1YF/exec";
 
 async function generateCard() {
-    const donorId = document.getElementById("donorId").value;
-    const email = document.getElementById("email").value;
+  const donorId = document.getElementById("donorId").value.trim();
+  const email   = document.getElementById("email").value.trim();
+  const spinner  = document.getElementById("spinner");
+  const errMsg   = document.getElementById("errMsg");
+  const container = document.getElementById("cardContainer");
 
-    try {
-        const res = await fetch(API_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8"
-            },
-            body: JSON.stringify({ donorId, email })
-        });
+  if (!donorId || !email) { showErr("Please fill in both fields."); return; }
 
-        const data = await res.json();
+  errMsg.style.display = "none";
+  container.innerHTML = "";
+  spinner.style.display = "flex";
 
-        if (data.success) {
-            document.getElementById("cardContainer").innerHTML = `
-                <div class="card" id="card">
-                    <h3>Donor Card</h3>
-                    <p><b>ID:</b> ${data.user.donorId}</p>
-                    <p><b>Name:</b> ${data.user.fullName}</p>
-                    <p><b>DOB:</b> ${data.user.dob}</p>
-                    <p><b>Gender:</b> ${data.user.gender}</p>
-                    <p><b>Blood Group:</b> ${data.user.bloodGroup}</p>
-                    <p><b>Phone:</b> ${data.user.phone}</p>
-                    <p><b>Email:</b> ${data.user.email}</p>
-                    <p><b>Address:</b> ${data.user.address}</p>
-                    <p><b>District:</b> ${data.user.district}</p>
-                    <p><b>ID Number:</b> ${data.user.idNumber}</p>
-                </div>
-            `;
+  try {
+    const res  = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ donorId, email })
+    });
+    const data = await res.json();
+    spinner.style.display = "none";
 
-            document.getElementById("downloadBtn").style.display = "inline-block";
-
-        } else {
-            alert("❌ Invalid Donor ID or Email");
-        }
-
-    } catch (err) {
-        alert("⚠️ Error connecting to server");
-        console.error(err);
+    if (data.success) {
+      const u = data.user;
+      container.innerHTML = `
+        <div class="card-wrap">
+          <div id="card">
+            <div class="card-header">
+              <svg class="card-header-logo" viewBox="0 0 32 32" fill="none">
+                <path d="M16 3C16 3 5 13.5 5 20.5a11 11 0 0 0 22 0C27 13.5 16 3 16 3Z" fill="white"/>
+                <path d="M16 9C16 9 9 16.5 9 21a7 7 0 0 0 14 0C23 16.5 16 9 16 9Z" fill="#C8001E" opacity="0.3"/>
+              </svg>
+              <div class="card-header-text">
+                <h3>LifeGive Donor Card</h3>
+                <p>Official Donor Record</p>
+              </div>
+              <span class="card-id-badge">${u.donorId}</span>
+            </div>
+            <div class="card-body">
+              ${row("Full Name",   u.fullName)}
+              ${row("Date of Birth", u.dob)}
+              ${row("Gender",     u.gender)}
+              ${row("Blood Group", `<span class="blood-badge">${u.bloodGroup}</span>`)}
+              ${row("Phone",      u.phone)}
+              ${row("Email",      u.email)}
+              ${row("Address",    u.address)}
+              ${row("District",   u.district)}
+              ${row("ID Number",  u.idNumber)}
+            </div>
+            <div class="card-footer">
+              <p>LifeGive · Registered Donor</p>
+              <svg viewBox="0 0 32 32" fill="none"><path d="M16 3C16 3 5 13.5 5 20.5a11 11 0 0 0 22 0C27 13.5 16 3 16 3Z" fill="#C8001E"/></svg>
+            </div>
+          </div>
+          <button class="btn-download" onclick="downloadCard()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download Card as Image
+          </button>
+        </div>
+      `;
+    } else {
+      showErr("Invalid Donor ID or email. Please check your details and try again.");
     }
+  } catch (err) {
+    spinner.style.display = "none";
+    showErr("Unable to connect to the server. Please try again later.");
+    console.error(err);
+  }
+}
+
+function row(label, val) {
+  return `<div class="card-row">
+    <span class="card-row-label">${label}</span>
+    <span class="card-row-val">${val}</span>
+  </div>`;
+}
+
+function showErr(msg) {
+  const el = document.getElementById("errMsg");
+  el.textContent = msg;
+  el.style.display = "block";
 }
 
 function downloadCard() {
-    const card = document.getElementById("card");
-
-    html2canvas(card).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "donor_card.png";
-        link.href = canvas.toDataURL();
-        link.click();
-    });
+  html2canvas(document.getElementById("card"), { scale: 2, useCORS: true }).then(canvas => {
+    const link = document.createElement("a");
+    link.download = "lifegive_donor_card.png";
+    link.href = canvas.toDataURL();
+    link.click();
+  });
 }
 </script>
-
 </body>
 </html>
