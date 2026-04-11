@@ -483,7 +483,7 @@ async function generateCard() {
             </div>
             <div class="card-body">
               ${row("Full Name",   u.fullName)}
-              ${row("Date of Birth", u.dob)}
+              ${row("Date of Birth", formatDate(u.dob))}
               ${row("Gender",     u.gender)}
               ${row("Blood Group", `<span class="blood-badge">${u.bloodGroup}</span>`)}
               ${row("Phone",      u.phone)}
